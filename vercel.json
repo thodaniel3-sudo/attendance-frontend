@@ -1,13 +1,3 @@
 {
-  "cleanUrls": false,
-  "rewrites": [
-    {
-      "source": "/scan",
-      "destination": "/scanner.html"
-    },
-    {
-      "source": "/scanner",
-      "destination": "/scanner.html"
-    }
-  ]
+  "cleanUrls": false
 }

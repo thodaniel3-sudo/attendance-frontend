@@ -104,7 +104,9 @@ button:hover { background:#7a4d2d; }
 </div>
 
 <script>
-const API_URL = "https://attendance-backend-6tmr.onrender.com/api";
+const API_URL = "https://attendance-system-backend-3ppe.onrender.com/api";
+
+
 
 // -------------------------------
 // UI helpers

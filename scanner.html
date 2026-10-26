@@ -32,11 +32,12 @@ button:hover { background:#7a4d2d; }
 }
 #scan-overlay .overlay-card {
   max-width:420px; width:100%; background:#111; padding:18px;
-  border-radius:10px; border:1px solid #333; color:#fff;
+  border-radius:10px; border:1px solid #333; color:#fff; text-align: center;
 }
-#scan-overlay input { background:#222; color:#ddd; border:1px solid #444; padding:10px; margin-top:8px; border-radius:6px; width:100%; }
+#scan-overlay input { background:#222; color:#ddd; border:1px solid #444; padding:10px; margin-top:8px; border-radius:6px; width:100%; text-align: left;}
 #scan-overlay button { flex:1; padding:10px; border-radius:6px; border:none; margin-top:10px; }
 #scan-overlay .button-row { display:flex; gap:8px; }
+#scan-overlay img { max-width: 120px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #333; }
 </style>
 </head>
 <body>
@@ -103,22 +104,55 @@ async function showConfirmAndPost(studentId){
   overlay.id='scan-overlay';
   overlay.innerHTML=`
     <div class="overlay-card">
-      <h3 style="text-align:center;color:#d4af37">Confirm Attendance</h3>
-      <p>Student ID: <strong>${studentId}</strong></p>
+      <h3 style="text-align:center;color:#d4af37;margin-top:0">Confirm Attendance</h3>
+      
+      <!-- Placeholder for Student Info -->
+      <img id="student-photo" src="" alt="Student Photo" style="display:none;">
+      <div id="student-name" style="font-weight:bold;font-size:18px;margin-bottom:4px;"></div>
+      <div id="student-matric" style="color:#aaa;margin-bottom:4px;"></div>
+      <div id="student-email" style="color:#aaa;margin-bottom:15px;font-size:14px;"></div>
+      
+      <hr style="border-color:#333; margin-bottom: 15px;">
+      
+      <!-- Lecturer Inputs -->
       <input id="scan-lecturer" placeholder="Lecturer Name">
       <input id="scan-course" placeholder="Course Code">
       <input id="scan-pin" placeholder="Enter secret PIN" type="password">
-      <label style="display:flex;align-items:center;margin-top:8px;color:#ddd">
-        <input id="scan-remember" type="checkbox" style="margin-right:8px"> Remember for today
+      
+      <label style="display:flex;align-items:center;margin-top:8px;color:#ddd;justify-content:center;">
+        <input id="scan-remember" type="checkbox" style="margin-right:8px; width:auto;"> Remember for today
       </label>
-      <div class="button-row">
+      
+      <div class="button-row" style="margin-top:15px;">
         <button id="scan-submit" style="background:#5c3a23;color:#fff;">Submit</button>
         <button id="scan-cancel" style="background:#444;color:#fff;">Cancel</button>
       </div>
+      
       <p id="scan-result" style="margin-top:12px;color:#ddd"></p>
     </div>
   `;
   document.body.appendChild(overlay);
+
+  // Fetch student data from backend to display their details
+  try {
+    const res = await fetch(`${API_URL}/student/${studentId}`);
+    const data = await res.json();
+    if(data.ok && data.student){
+      const photoEl = document.getElementById('student-photo');
+      if(data.student.photo_url) {
+          photoEl.src = data.student.photo_url;
+          photoEl.style.display = 'inline-block';
+      }
+      document.getElementById('student-name').textContent = "Name: " + data.student.name;
+      document.getElementById('student-matric').textContent = "Matric: " + data.student.matric_number;
+      document.getElementById('student-email').textContent = "Email: " + data.student.email;
+    } else {
+      document.getElementById('student-name').textContent = "Student ID: " + studentId;
+    }
+  } catch(e) {
+    console.warn("Could not fetch student details", e);
+    document.getElementById('student-name').textContent = "Student ID: " + studentId;
+  }
 
   // Auto-fill saved values
   const savedPin=getSavedPin(); if(savedPin){ document.getElementById('scan-pin').value=savedPin; document.getElementById('scan-remember').checked=true; }
@@ -132,13 +166,19 @@ async function showConfirmAndPost(studentId){
     const remember=document.getElementById('scan-remember').checked;
     const resultBox=document.getElementById('scan-result');
     if(!pin){ resultBox.textContent='Please enter PIN.'; return; }
+    if(!lecturer || !course) { resultBox.textContent='Please enter Lecturer and Course.'; return; }
+    
     resultBox.textContent='Submitting attendance...';
     const res=await postAttendance(studentId,lecturer,course,pin);
     if(res.ok){
-      resultBox.textContent='✅ Attendance recorded.';
+      resultBox.textContent='✅ Attendance recorded successfully.';
+      resultBox.style.color = '#a8f0b1';
       if(remember){ savePinForToday(pin); if(lecturer) saveLecturerName(lecturer); }
-      setTimeout(()=>{ overlay.remove(); },900);
-    } else { resultBox.textContent='Error: '+(res.error||'Failed to record attendance.'); }
+      setTimeout(()=>{ overlay.remove(); }, 1500);
+    } else { 
+      resultBox.textContent='Error: '+(res.error||'Failed to record attendance.'); 
+      resultBox.style.color = '#ff9a9a';
+    }
   });
 }
 

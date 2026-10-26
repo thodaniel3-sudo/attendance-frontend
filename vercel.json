@@ -1,8 +1,12 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "rewrites": [
     {
       "source": "/scan",
+      "destination": "/scanner.html"
+    },
+    {
+      "source": "/scanner",
       "destination": "/scanner.html"
     }
   ]
